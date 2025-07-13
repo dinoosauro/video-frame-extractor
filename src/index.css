@@ -231,7 +231,8 @@ select {
 }
 
 select:hover,
-button:hover .pointer:hover {
+button:hover,
+.pointer:hover {
   cursor: pointer;
 }
 

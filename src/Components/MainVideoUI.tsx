@@ -107,10 +107,11 @@ export default function MainVideoUI({ video, videoBlobUrl }: Props) {
     /**
      * Get the suggested file name for the extracted frame
      * @param videoObject the HTMLVideoElement that'll be used to get the currentTime
+     * @param exportOptions the ExportOptions Object that is being used for this conversion. If not passed, the default one will be used. Note that this is important for interval conversions, since the user might change the settings while a conversion is being made.
      * @returns a string with the suggested file name for the image
      */
-    function getFileName(videoObject?: HTMLVideoElement) {
-        return `${video.name.substring(0, video.name.lastIndexOf("."))}-${(videoObject ?? videoObj.current)?.currentTime.toFixed(2)}.${videoExportOptions.current.outputFormat === "jpeg" ? "jpg" : videoExportOptions.current.outputFormat}`;
+    function getFileName(videoObject?: HTMLVideoElement, exportOptions = videoExportOptions.current) {
+        return `${video.name.substring(0, video.name.lastIndexOf("."))}-${(videoObject ?? videoObj.current)?.currentTime.toFixed(2)}.${exportOptions.outputFormat === "jpeg" ? "jpg" : exportOptions.outputFormat}`;
     }
     /**
      * An array that contains the start and the end of the interval (for multiple frames extraction)
@@ -136,28 +137,30 @@ export default function MainVideoUI({ video, videoBlobUrl }: Props) {
     /**
      * Resize the image if requested by the user, and obtain the video frame as a Blob
      * @param videoObject the HTMLVideoElement that should be used to extract the frame
+     * @param exportOptions the ExportOptions Object that is being used for this conversion. If not passed, the default one will be used. Note that this is important for interval conversions, since the user might change the settings while a conversion is being made.
+     * @param videoSensitiveOptions the ExportRerenderOptions Object that is being used for this conversion. If not passed, the default one will be used. Note that this is important for interval conversions, since the user might change the settings while a conversion is being made.
      * @returns a Blob with the current frame
      */
-    function ExtractVideoWrapper(videoObject = videoObj.current ?? undefined) {
+    function ExtractVideoWrapper(videoObject = videoObj.current ?? undefined, videoOptions = videoExportOptions.current, videoSensitiveOptions = videoSensitiveExportOptions) {
         if (!videoObject) throw new Error("Failed getting video object");
         let [width, height] = [videoObject.videoWidth, videoObject.videoHeight];
-        if (videoSensitiveExportOptions.resizeImage) {
-            switch(videoSensitiveExportOptions.resizeType) {
+        if (videoSensitiveOptions.resizeImage) {
+            switch(videoSensitiveOptions.resizeType) {
                 case "percentage":
-                    width *= videoExportOptions.current.resizePercentage;
-                    height *= videoExportOptions.current.resizePercentage;
+                    width *= videoOptions.resizePercentage;
+                    height *= videoOptions.resizePercentage;
                     break;
                 case "width":
-                    width = videoExportOptions.current.resizeFixed;
+                    width = videoOptions.resizeFixed;
                     height = width * videoObject.videoHeight / videoObject.videoWidth
                     break;
                 case "height": 
-                    height = videoExportOptions.current.resizeFixed;
+                    height = videoOptions.resizeFixed;
                     width = height * videoObject.videoWidth / videoObject.videoHeight
                     break;
             }
         }
-        return ExtractVideoFrame({ video: videoObject ?? (videoObj.current as HTMLVideoElement), quality: videoExportOptions.current.quality, format: videoExportOptions.current.outputFormat, width, height })
+        return ExtractVideoFrame({ video: videoObject ?? (videoObj.current as HTMLVideoElement), quality: videoOptions.quality, format: videoOptions.outputFormat, width, height })
     }
     
     useEffect(() => {
@@ -245,8 +248,9 @@ export default function MainVideoUI({ video, videoBlobUrl }: Props) {
                             <div className="flex gap mainFlex mainMiniFlex">
                                 <ImageButton onClick={async () => new DownloadContent("link").downloadFile({filename: getFileName(), content: await ExtractVideoWrapper() })} img="saveImage">{lang("Export current frame")}</ImageButton>
                                 <ImageButton img="shareios" onClick={async () => {
+                                    const blob = await ExtractVideoWrapper();
                                     navigator.share({
-                                        files: [new File([await ExtractVideoWrapper()], getFileName(), { type: `image/${videoExportOptions.current.outputFormat}` })]
+                                        files: [new File([blob], getFileName(), { type: blob.type })]
                                     })
                                 }}>{lang("Share current frame")}</ImageButton>
                                 <ImageButton img="imageAdd" onClick={async () => { // Add image in the exportation list
@@ -278,7 +282,7 @@ export default function MainVideoUI({ video, videoBlobUrl }: Props) {
                             </label><br></br>
                             <ZipOptionsCallback disabled={areVideoControlsDisabled} otherAdvancedOptions={
                             <label className="flex hcenter gap">
-                                <input type="checkbox" defaultChecked={videoExportOptions.current.createNewVideoElement} onChange={(e) => (videoExportOptions.current.createNewVideoElement = e.target.checked)}></input>
+                                <input disabled={areVideoControlsDisabled} type="checkbox" defaultChecked={videoExportOptions.current.createNewVideoElement} onChange={(e) => (videoExportOptions.current.createNewVideoElement = e.target.checked)}></input>
                                 {lang("Create a new video element for this operation. This will allow you to download multiple intervals at the same time, but it will increment RAM usage.")}
                             </label>
                             } callback={(value) => {
@@ -289,8 +293,9 @@ export default function MainVideoUI({ video, videoBlobUrl }: Props) {
                                  * The Promise that'll be solved when the browser has rendered the frame
                                  */
                                 let localSeekedPromise: (() => void) | null = null;
+                                const createNewVideoElement = !!videoExportOptions.current.createNewVideoElement;
                                 const [videoObject, isLocalVideoObject] = await new Promise<[HTMLVideoElement, boolean]>(res => {
-                                    !videoExportOptions.current.createNewVideoElement && videoObj.current && res([videoObj.current, false]); // In this case, we'll use the main video object.
+                                    !createNewVideoElement && videoObj.current && res([videoObj.current, false]); // In this case, we'll use the main video object.
                                     const newVideo = Object.assign(document.createElement("video"), { // Create the Video element that'll be used for this operation
                                         src: videoBlobUrl,
                                         autoplay: true,
@@ -306,7 +311,8 @@ export default function MainVideoUI({ video, videoBlobUrl }: Props) {
                                     document.body.append(newVideo);
                                 })
                                 try {
-                                    !videoExportOptions.current.createNewVideoElement && updateVideoControlsDisabled(true); // If the main video element is being used, disable the controls so that 
+                                    const [videoOptions, videoSensitiveOptions] = [{...videoExportOptions.current}, {...videoSensitiveExportOptions}]; // We'll copy these two object so that, if the user changes some values, they won't alter the current interval download.
+                                    !createNewVideoElement && updateVideoControlsDisabled(true); // If the main video element is being used, disable the controls so that 
                                     if (!videoExportInterval.current[0]) videoExportInterval.current[0] = 0; // The start of the interval
                                     videoObject.currentTime = videoExportInterval.current[0]; 
                                     let currentPosition = videoObject.currentTime;
@@ -331,7 +337,7 @@ export default function MainVideoUI({ video, videoBlobUrl }: Props) {
                                     }
                                     while (currentPosition < max) { // Extract the frames
                                         videoObject.pause();
-                                        await downloadContent.downloadFile({ filename: getFileName(videoObject), content: await ExtractVideoWrapper(videoObject) }); // Download the file, or add it to the zip file.
+                                        await downloadContent.downloadFile({ filename: getFileName(videoObject, videoOptions), content: await ExtractVideoWrapper(videoObject, videoOptions, videoSensitiveOptions) }); // Download the file, or add it to the zip file.
                                         currentPosition += (1 / videoFrameRate); 
                                         if (currentPosition < max) { // If the next frame should be extracted, let's wait that the browser renders it. 
                                             await new Promise<void>(res => {
@@ -347,7 +353,7 @@ export default function MainVideoUI({ video, videoBlobUrl }: Props) {
                                     }
                                     await downloadContent.releaseFile(zipFileName); // In case of zip files, they'll be closed and downloaded
                                     videoObject.controls = true; // Show again the controls of the video object
-                                    !videoExportOptions.current.createNewVideoElement && updateVideoControlsDisabled(false); // Enable again the components
+                                    !createNewVideoElement && updateVideoControlsDisabled(false); // Enable again the components
                                     isLocalVideoObject && videoObject.remove(); // And remove the videoObject if it was created only for this extraction
                                     updateOperationList(prev => { // Delete the current extraction from the operation list.
                                         const entry = prev.findIndex(item => item.id === downloadContent.operationId);
@@ -356,7 +362,7 @@ export default function MainVideoUI({ video, videoBlobUrl }: Props) {
                                     })
                                 } catch (ex) {
                                     videoObject.controls = true;
-                                    !videoExportOptions.current.createNewVideoElement && updateVideoControlsDisabled(false);
+                                    !createNewVideoElement && updateVideoControlsDisabled(false);
                                     isLocalVideoObject && videoObject.remove();
                                 }
                             }}>{lang("Export frames")}</ImageButton>
@@ -378,20 +384,20 @@ export default function MainVideoUI({ video, videoBlobUrl }: Props) {
                             <input disabled={areVideoControlsDisabled} defaultValue={videoExportOptions.current.quality} onChange={e => (videoExportOptions.current.quality = +e.target.value)} type="range" min={0} max={1} step={0.01}></input>
                         </label><br></br>
                         <label className="flex hcenter gap">
-                            <input type="checkbox" defaultChecked={videoSensitiveExportOptions.resizeImage} onChange={(e) => updateVideoSensitiveExportOptions(prev => {return {...prev, resizeImage: e.target.checked}})}></input>
+                            <input type="checkbox" disabled={areVideoControlsDisabled}  defaultChecked={videoSensitiveExportOptions.resizeImage} onChange={(e) => updateVideoSensitiveExportOptions(prev => {return {...prev, resizeImage: e.target.checked}})}></input>
                             {lang("Resize the output image")}
                         </label><br></br>
                         {videoSensitiveExportOptions.resizeImage && <Card>
                         <h4>{lang("Resize options:")}</h4>
-                        <select defaultValue={videoSensitiveExportOptions.resizeType} onChange={(e) => updateVideoSensitiveExportOptions(prev => {return {...prev, resizeType: e.target.value as "percentage"}})}>
+                        <select disabled={areVideoControlsDisabled}  defaultValue={videoSensitiveExportOptions.resizeType} onChange={(e) => updateVideoSensitiveExportOptions(prev => {return {...prev, resizeType: e.target.value as "percentage"}})}>
                             <option value={"percentage"}>{lang("Resize in percentage")}</option>
                             <option value={"width"}>{lang("Set a fixed width")}</option>
                             <option value={"height"}>{lang("Set a fixed height")}</option>
                         </select><br></br><br></br>
                         {videoSensitiveExportOptions.resizeType === "percentage" ? <label>
-                            {lang("Output image width/height:")} <input type="range" min={0} max={1} step={0.01} defaultValue={videoExportOptions.current.resizePercentage} onChange={(e) => (videoExportOptions.current.resizePercentage = +e.target.value)}></input>
+                            {lang("Output image width/height:")} <input disabled={areVideoControlsDisabled}  type="range" min={0} max={1} step={0.01} defaultValue={videoExportOptions.current.resizePercentage} onChange={(e) => (videoExportOptions.current.resizePercentage = +e.target.value)}></input>
                         </label> : <label className="flex hcenter gap">
-                            {lang(`Output ${videoSensitiveExportOptions.resizeType}`)}: <input type="number" defaultValue={videoExportOptions.current.resizeFixed} onChange={(e) => (videoExportOptions.current.resizeFixed = +e.target.value)}></input></label>}
+                            {lang(`Output ${videoSensitiveExportOptions.resizeType}`)}: <input disabled={areVideoControlsDisabled}  type="number" defaultValue={videoExportOptions.current.resizeFixed} onChange={(e) => (videoExportOptions.current.resizeFixed = +e.target.value)}></input></label>}
                         </Card>}
                     </Card>
                 </div>

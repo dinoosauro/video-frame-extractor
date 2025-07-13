@@ -53,7 +53,7 @@ export default function App() {
     <div className="flex gap" style={{ flexWrap: "wrap" }}>
       <a className="pointer" href="https://github.com/dinoosauro/video-frame-extractor" target="_blank">{lang("View on GitHub")}</a>
       <Settings></Settings>
-      <span>{lang("Version")} {window.version}</span>
+      <span style={{textDecoration: "underline"}}>{lang("Version")} {window.version}</span>
     </div>
   </>
 

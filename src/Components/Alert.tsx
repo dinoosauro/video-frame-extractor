@@ -25,7 +25,7 @@ export default function Alert({children, askForDismiss}: Props) {
         <div>
             {children}
         </div>
-        <img onClick={askForDismiss} ref={ref => GetIcons({
+        <img className="pointer" onClick={askForDismiss} ref={ref => GetIcons({
             ref,
             type: "dismiss"
         })}></img>
