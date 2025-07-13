@@ -107,10 +107,10 @@ export default function VideoQueue({ queueFiles, callback, video, updateQueueFil
                                 updateOptionsDisabled(true);
                                 const zipFileName = `${video.name.substring(0, video.name.lastIndexOf("."))} - Queue [${Date.now()}].zip`;
                                 const zipOptions = { ...zipFileOptions };
-                                const zipDownload = new DownloadContent(zipOptions.downloadType === "zip" ? zipOptions.useServiceWorker ? "zipstream" : "zipblob" : zipOptions.downloadType === "share" ? "share" : "link");
+                                const zipDownload = new DownloadContent(zipOptions.downloadType === "zip" ? zipOptions.useServiceWorker ? "zipstream" : "zipblob" : zipOptions.downloadType === "share" ? "share" : "link", zipFileName);
                                 updateOperationList(prev => [...prev, { // Add the current download to the operation list
                                     id: zipDownload.operationId,
-                                    description: `Downloading frame list`,
+                                    description: lang(`Downloading frame list`),
                                     max: queueFiles.length,
                                     progress: 0
                                 }])

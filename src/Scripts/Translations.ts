@@ -83,7 +83,8 @@ const translationStrings = new Map<string, TranslationItems>([
     ["Don't show this again", {it: "Non mostrarlo ancora"}],
     ["Got it", {it: "Capito"}],
     ["Advanced settings:", {it: "Impostazioni avanzate"}],
-    ["Version", {it: "Versione"}]
+    ["Version", {it: "Versione"}],
+    ["Downloading frame list", {it: "Scarico la lista dei frame"}]
 ])
 
 /**
