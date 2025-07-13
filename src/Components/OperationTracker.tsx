@@ -34,7 +34,7 @@ export default function OperationTracker({ status }: Props) {
     }, [isTrackerOpen])
     // status.length === 0 ? <></> : !isTrackerOpen ? 
     return <>
-        <div key={"DocumentQueueButton"} ref={buttonRef} data-operationtracker onClick={() => buttonRef.current?.style.opacity !== "0" && openTracker(true)} className="card hover opacity buttonLike" style={{ width: "24px", height: "24px", borderRadius: "50%", position: "absolute", top: "15px", right: "15px", zIndex: "2", border: "var(--documentqueueborder)" }}>
+        <div key={"DocumentQueueButton"} ref={buttonRef} data-operationtracker onClick={() => buttonRef.current?.style.opacity !== "0" && openTracker(true)} className="card pointer opacity buttonLike" style={{ width: "24px", height: "24px", borderRadius: "50%", position: "absolute", top: "15px", right: "15px", zIndex: "2", border: "var(--documentqueueborder)" }}>
             <img style={{ width: "100%", height: "100%" }} ref={ref => GetIcons({ ref, type: "queue" })}></img>
         </div>
         {isTrackerOpen && <div className="dialog" ref={dialogRef}>
