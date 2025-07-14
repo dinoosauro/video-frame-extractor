@@ -26,7 +26,7 @@ interface Props {
 export default function ZipOptionsCallback({ callback, disabled, otherAdvancedOptions }: Props) {
     const [options, updateOptions] = useState({
         downloadType: "zip" as "zip",
-        useServiceWorker: true
+        useServiceWorker: !!navigator.serviceWorker?.controller
     });
     useEffect(() => {
         callback(options);

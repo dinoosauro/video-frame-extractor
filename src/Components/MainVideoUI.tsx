@@ -169,9 +169,11 @@ export default function MainVideoUI({ video, videoBlobUrl }: Props) {
             const video = Object.assign(document.createElement("video"), {
                 muted: true,
                 autoplay: true,
+                playsInline: true,
                 src: videoBlobUrl
             });
             video.classList.add("hideVideo"); // Let's make this video invisible to the user
+            console.log(video)
             video.addEventListener("playing", () => {
                 /**
                  * Getting video framerate is unreliable in JavaScript.
@@ -215,12 +217,12 @@ export default function MainVideoUI({ video, videoBlobUrl }: Props) {
         <Card>
             <div className="flex mainFlex gap">
                 <div style={{ flex: "2 0" }} key={"VideoPreviewStable"}>
-                    <Card secondLevel={true}>
+                    <Card fullWidth={true} secondLevel={true}>
                         <h2>{lang("Video preview:")}</h2>
                         <div className="flex wcenter">
-                            <video onPlay={() => updateVideoPaused(false)} onPause={() => updateVideoPaused(true)} onSeeked={() => seekedPromise.current && seekedPromise.current()} ref={videoObj} controls autoPlay muted src={videoBlobUrl}></video>
+                            <video playsInline={true} onPlay={() => updateVideoPaused(false)} onPause={() => updateVideoPaused(true)} onSeeked={() => seekedPromise.current && seekedPromise.current()} ref={videoObj} controls autoPlay muted src={videoBlobUrl}></video>
                         </div><br></br>
-                        <div className="flex wcenter miniButton miniGap" key={"VideoControls"}>
+                        <div className="flex wcenter miniButton miniGap mainFlex mainMiniFlex" key={"VideoControls"} style={{overflow: "auto"}}>
                             <ImageButton disabled={areVideoControlsDisabled} img="previousFrame" onClick={() => {
                                 if (!videoObj.current) return;
                                 videoObj.current.currentTime -= (1 / videoFrameRate);
@@ -300,6 +302,7 @@ export default function MainVideoUI({ video, videoBlobUrl }: Props) {
                                         src: videoBlobUrl,
                                         autoplay: true,
                                         muted: true,
+                                        playsInline: true,
                                         onload: () => newVideo.play(),
                                         onplay: () => {
                                             newVideo.pause();

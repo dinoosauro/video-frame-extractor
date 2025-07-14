@@ -72,7 +72,7 @@ interface GetIconsProps {
     /**
      * If the image should be added to the list of icons that need to be rerendered after the user customized the website theme
      */
-    addToList?: boolean
+    addToList?: boolean,
 }
 
 export default function GetIcons({ ref, type, colorId = "--text", addToList = true }: GetIconsProps) {

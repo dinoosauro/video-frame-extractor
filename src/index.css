@@ -33,7 +33,8 @@ body {
 
 button,
 input,
-progress {
+progress,
+.fullWidth {
   width: 100%;
   width: -webkit-fill-available;
   width: -moz-available;
@@ -78,7 +79,7 @@ button:not([disabled=true]):not([disabled=""]):active {
 }
 
 .mainMiniFlex>* {
-  flex: 1 0 200px;
+  flex: 1 0 150px;
 }
 
 .gap {
@@ -253,6 +254,8 @@ button:hover,
 .alert>img {
   width: 24px;
   height: 24px;
+  min-width: 24px;
+  min-height: 24px;
 }
 
 [disabled=true],

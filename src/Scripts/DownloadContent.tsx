@@ -59,7 +59,7 @@ export default class DownloadContent<T extends "zipblob" | "zipstream" | "share"
             onclick: () => closeAlert && closeAlert()
         });
         a.click();
-        closeAlert = CreateAlert(<span>{lang("Downloaded")} {a.download}</span>, a);
+        closeAlert = CreateAlert(<span style={{wordBreak: "break-all"}}>{lang("Downloaded")} {a.download}</span>, a);
         return a;
     }
 

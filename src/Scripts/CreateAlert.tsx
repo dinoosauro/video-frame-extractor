@@ -24,6 +24,6 @@ export default function CreateAlert(item: ReactNode, ...elements: HTMLElement[])
         (div.querySelector(".opacity") as HTMLElement).style.opacity = "1";
         for (const item of elements) div.firstElementChild?.insertBefore(item, div.firstElementChild.lastChild ?? null);
     }, 50);
-    setTimeout(closeDiv, 5050);
+    setTimeout(closeDiv, 50050);
     return closeDiv;
 }
