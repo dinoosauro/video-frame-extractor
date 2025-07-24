@@ -2,6 +2,12 @@ const cacheName = 'videoframeextractor-cache';
 const filestoCache = [
     './',
     './index.html',
+    './icon.png',
+    './icon.svg',
+    './manifest.json',
+    './assets/index.css',
+    './assets/index.js',
+    './assets/index2.js',
 ];
 self.addEventListener('install', e => {
     e.waitUntil(
